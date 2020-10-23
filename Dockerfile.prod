@@ -1,0 +1,22 @@
+#stage 1 - build
+FROM node:current-alpine as builder
+ENV NODE_ENV=development
+# tell app to listen on 8080 instead of default 3000
+WORKDIR /usr/src/app
+COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
+RUN yarn install
+COPY . .
+RUN yarn build
+
+
+#stage 2 - build final image
+FROM node:current-alpine as production
+ENV NODE_ENV production
+ENV PORT=8080
+WORKDIR /usr/src/app
+COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
+RUN npm install
+COPY --from=builder ./usr/src/app/build ./build
+COPY server.js .
+EXPOSE 8080
+CMD ["node", "."]
